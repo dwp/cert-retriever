@@ -37,8 +37,8 @@ jobs:
 
       - name: Run tests
         run: |
-          pip install -r requirements.txt
-          # python -m pytest -v
+          pip install -r test_requirements.txt
+          python -m pytest -v
   
 
   format:
