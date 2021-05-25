@@ -1,16 +1,16 @@
-resource "aws_ecr_repository" "dataworks-repo-template-docker" {
-  name = "dataworks-repo-template-docker"
+resource "aws_ecr_repository" "cert-retriever" {
+  name = "cert-retriever"
   tags = merge(
     local.common_tags,
-    { DockerHub : "dwpdigital/dataworks-repo-template-docker" }
+    { DockerHub : "dwpdigital/cert-retriever" }
   )
 }
 
-resource "aws_ecr_repository_policy" "dataworks-repo-template-docker" {
-  repository = aws_ecr_repository.dataworks-repo-template-docker.name
+resource "aws_ecr_repository_policy" "cert-retriever" {
+  repository = aws_ecr_repository.cert-retriever.name
   policy     = data.terraform_remote_state.management.outputs.ecr_iam_policy_document
 }
 
 output "ecr_example_url" {
-  value = aws_ecr_repository.dataworks-repo-template-docker.repository_url
+  value = aws_ecr_repository.cert-retriever.repository_url
 }

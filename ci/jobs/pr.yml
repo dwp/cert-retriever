@@ -1,29 +1,29 @@
 jobs:
-  - name: dataworks-repo-template-docker-pr
+  - name: cert-retriever-pr
     plan:
-      - get: dataworks-repo-template-docker-pr
+      - get: cert-retriever-pr
         trigger: true
         version: every
-      - put: dataworks-repo-template-docker-pr
+      - put: cert-retriever-pr
         params:
-          path: dataworks-repo-template-docker-pr
+          path: cert-retriever-pr
           status: pending
       - .: (( inject meta.plan.terraform-bootstrap ))
         input_mapping:
-          dataworks-repo-template-docker: dataworks-repo-template-docker-pr
+          cert-retriever: cert-retriever-pr
       - .: (( inject meta.plan.terraform-plan ))
         input_mapping:
-          dataworks-repo-template-docker: dataworks-repo-template-docker-pr
+          cert-retriever: cert-retriever-pr
         params:
           TF_WORKSPACE: "management"
           DETAILED_EXITCODE: ""
         on_failure:
-          put: dataworks-repo-template-docker-pr
+          put: cert-retriever-pr
           params:
-            path: dataworks-repo-template-docker-pr
+            path: cert-retriever-pr
             status: failure
         on_success:
-          put: dataworks-repo-template-docker-pr
+          put: cert-retriever-pr
           params:
-            path: dataworks-repo-template-docker-pr
+            path: cert-retriever-pr
             status: success

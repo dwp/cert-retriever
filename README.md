@@ -1,6 +1,6 @@
-# dataworks-repo-template-docker
+# cert-retriever
 
-## Description
+## Docker repository for fetching all ACM certs in different environments
 
 This repo contains Makefile, and Dockerfile to fit the standard pattern.
 This repo is a base to create new Docker image repos, adding the githooks submodule, making the repo ready for use.
