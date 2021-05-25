@@ -18,15 +18,18 @@ cert_pattern = re.compile(r"-+BEGIN CERTIFICATE-+[\n\s\S]+-+END CERTIFICATE-+\n"
 
 @mock_acm
 class RetrieveAllCertsTests(unittest.TestCase):
-
     def setUp(self):
         self.acm = boto3.client("acm", region_name="eu-west-2")
 
-        self.test_arn = self.acm.request_certificate(DomainName="test.com")["CertificateArn"]
+        self.test_arn = self.acm.request_certificate(DomainName="test.com")[
+            "CertificateArn"
+        ]
         self.acm.request_certificate(DomainName="test.test.com")
         self.acm.request_certificate(DomainName="test2.test.com")
 
-        self.test_cert = self.acm.get_certificate(CertificateArn=self.test_arn)["Certificate"]
+        self.test_cert = self.acm.get_certificate(CertificateArn=self.test_arn)[
+            "Certificate"
+        ]
 
         self.filepaths_to_remove = []
 
@@ -38,7 +41,9 @@ class RetrieveAllCertsTests(unittest.TestCase):
         certs = retrieve_all_certs.get_cert_arns(self.acm)
 
         for cert in certs:
-            self.assertIn("arn:aws:acm:eu-west-2:123456789012:certificate/", cert["arn"])
+            self.assertIn(
+                "arn:aws:acm:eu-west-2:123456789012:certificate/", cert["arn"]
+            )
 
         self.assertEqual(certs[0]["domain"], "test.com")
 
@@ -69,5 +74,5 @@ class RetrieveAllCertsTests(unittest.TestCase):
             self.assertTrue(os.path.isfile(filepath))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

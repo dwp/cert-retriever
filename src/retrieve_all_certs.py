@@ -46,8 +46,10 @@ logger = setup_logging(log_level, environment, application)
 
 def get_cert_arns(acm_client):
     logger.info("Getting all certs from ACM...")
-    return [{"arn": i["CertificateArn"], "domain": i["DomainName"]}
-            for i in acm_client.list_certificates().get("CertificateSummaryList", [])]
+    return [
+        {"arn": i["CertificateArn"], "domain": i["DomainName"]}
+        for i in acm_client.list_certificates().get("CertificateSummaryList", [])
+    ]
 
 
 def get_cert_data(acm_client, arn):
@@ -86,5 +88,5 @@ def main():
             logger.info(f"Successfully saved cert with domain: {domain}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
