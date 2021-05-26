@@ -2,6 +2,9 @@ FROM python:3.8-alpine3.10
 
 WORKDIR /app
 
+# Data volume
+VOLUME [ "/certificates" ]
+
 RUN apk --update --no-cache add gcc musl-dev libffi-dev openssl-dev
 
 COPY requirements.txt ./
