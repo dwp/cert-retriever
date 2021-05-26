@@ -1,0 +1,6 @@
+terraform.tf
+terraform.tfvars
+.pytest_cache
+.idea
+*.pyc
+*.pem
