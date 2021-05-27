@@ -2,7 +2,7 @@ FROM python:3.8-alpine3.10
 
 WORKDIR /app
 
-RUN apk --update --no-cache add gcc musl-dev libffi-dev openssl-dev
+RUN apk --update --no-cache add python gcc musl-dev libffi-dev openssl-dev
 RUN chown -R nobody:nogroup /certificates/
 
 COPY requirements.txt ./
