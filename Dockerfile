@@ -7,6 +7,7 @@ VOLUME [ "/certificates" ]
 
 RUN apk --update --no-cache add gcc musl-dev libffi-dev openssl-dev
 RUN chown -R nobody:nogroup /certificates
+RUN chown -R nobody:nogroup /app
 
 COPY requirements.txt ./
 RUN  pip install -r requirements.txt
