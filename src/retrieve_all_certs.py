@@ -86,6 +86,7 @@ def main():
             logger.error(f"Failed to save cert with domain: {domain}")
         else:
             logger.info(f"Successfully saved cert with domain: {domain}")
+    logger.info(f"Finished fetching and saving certs")
 
 
 if __name__ == "__main__":
