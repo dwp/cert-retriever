@@ -5,9 +5,8 @@ WORKDIR /app
 # Data volume
 VOLUME [ "/certificates" ]
 
-chown -R nobody:nogroup /certificates/
-
-RUN apk --update --no-cache add gcc musl-dev libffi-dev openssl-dev
+RUN apk --update --no-cache add gcc musl-dev libffi-dev openssl-dev \
+    chown -R nobody:nogroup /certificates
 
 COPY requirements.txt ./
 RUN  pip install -r requirements.txt
