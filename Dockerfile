@@ -12,4 +12,6 @@ RUN  pip install -r requirements.txt
 
 COPY src/*.py ./
 
+chown -R nobody:nogroup /certificates
+
 ENTRYPOINT ["python", "retrieve_all_certs.py"]
