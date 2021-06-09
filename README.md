@@ -11,6 +11,7 @@ After cloning this repo, please run:
 ## Environment variables
 
 The required environment variables. They are replaced with the parameters passed in from the above arguments
+* The `CERTS_DESTINATION_FOLDER` is needed or the script will fail to execute
 
 |      Variable name       | Example       | Description                                          |
 |--------------------------|:-------------:|-----------------------------------------------------:|
