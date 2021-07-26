@@ -5,9 +5,13 @@ from unittest.mock import MagicMock
 
 import boto3
 from moto import mock_acm
+from moto import mock_s3
 
 dest_folder = os.path.join(os.getcwd(), "tests")
 os.environ["CERTS_DESTINATION_FOLDER"] = dest_folder
+os.environ["ADDITIONAL_CERTS_PREFIXES"] = "prefixone,prefixtwo"
+os.environ["ADDITIONAL_CERTS_BUCKET"] = "ac_bucket"
+
 
 from src import retrieve_all_certs
 
@@ -17,9 +21,13 @@ cert_pattern = re.compile(r"-+BEGIN CERTIFICATE-+[\n\s\S]+-+END CERTIFICATE-+\n"
 
 
 @mock_acm
+@mock_s3
 class RetrieveAllCertsTests(unittest.TestCase):
     def setUp(self):
+
         self.acm = boto3.client("acm", region_name="eu-west-2")
+        self.s3_client = boto3.client("s3", region_name="eu-west-2")
+        self.s3_resource = boto3.resource("s3", region_name="eu-west-2")
 
         self.test_arn = self.acm.request_certificate(DomainName="test.com")[
             "CertificateArn"
@@ -32,6 +40,8 @@ class RetrieveAllCertsTests(unittest.TestCase):
         ]
 
         self.filepaths_to_remove = []
+        self.source_prefixes = os.environ["ADDITIONAL_CERTS_PREFIXES"].split(",")
+        self.bucket = os.environ["ADDITIONAL_CERTS_BUCKET"]
 
     def tearDown(self):
         for filepath in self.filepaths_to_remove:
@@ -63,6 +73,35 @@ class RetrieveAllCertsTests(unittest.TestCase):
 
         with open(filepath, "r") as file:
             self.assertEqual(file.read(), self.test_cert)
+
+    def test_get_additional_certs_keys(self):
+
+        self.s3_client.create_bucket(
+            Bucket=self.bucket,
+            CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+        )
+        some_data = b"-----BEGIN (test) CERTIFICATE----- abcd -----END CERTIFICATE-----"
+        self.s3_client.put_object(
+            Bucket=self.bucket, Key="prefixone/abcd.pem", Body=some_data
+        )
+        self.s3_client.put_object(
+            Bucket=self.bucket, Key="prefixtwo/abcd/abcd.pem", Body=some_data
+        )
+        self.s3_client.put_object(
+            Bucket=self.bucket, Key="prefixone/abcd/abcd.pem", Body=some_data
+        )
+        self.s3_client.put_object(
+            Bucket=self.bucket, Key="not/prefixone/abcd/abcd.pem", Body=some_data
+        )
+        expected = [
+            {"key": "prefixone/abcd.pem", "cert_name": "prefixone_abcd"},
+            {"key": "prefixone/abcd/abcd.pem", "cert_name": "prefixone_abcd_abcd"},
+            {"key": "prefixtwo/abcd/abcd.pem", "cert_name": "prefixtwo_abcd_abcd"},
+        ]
+        actual = retrieve_all_certs.get_additional_certs_keys(
+            self.s3_client, self.bucket, self.source_prefixes
+        )
+        self.assertEqual(expected, actual)
 
     def test_main(self):
         retrieve_all_certs.main()
