@@ -16,9 +16,11 @@ After cloning this repo, please run:
 The required environment variables. They are replaced with the parameters passed in from the above arguments
 * The `CERTS_DESTINATION_FOLDER` is needed or the script will fail to execute
 
-|      Variable name       | Example       | Description                                          |
-|--------------------------|:-------------:|-----------------------------------------------------:|
-| CERTS_DESTINATION_FOLDER | /certificates | The path in which pulled certificates will be placed |
-| LOG_LEVEL                | INFO          | The desired log level, INFO or DEBUG                 |
-| ENVIRONMENT              | NOT_SET       | The environment the app runs in. e.g. Development    |
-| APPLICATION              | NOT_SET       | The name of the application                          |
+|      Variable name        | Example              | Description                                          |
+|---------------------------|:--------------------:|-----------------------------------------------------:|
+| CERTS_DESTINATION_FOLDER  | /certificates        | The path in which pulled certificates will be placed |
+| LOG_LEVEL                 | INFO                 | The desired log level, INFO or DEBUG                 |
+| ENVIRONMENT               | NOT_SET              | The environment the app runs in. e.g. Development    |
+| APPLICATION               | NOT_SET              | The name of the application                          |
+| ADDITIONAL_CERTS_BUCKET   | bucket-name          | The id of the bucket where non-ACM certificates are  |
+| ADDITIONAL_CERTS_PREFIXES | ab_certs,cd/ef_certs | Prefixes that contain certs that should be retrieved |
