@@ -101,7 +101,8 @@ def main():
     s3_client = boto3.client("s3", region_name=region)
     s3_resource = boto3.resource("s3", region_name=region)
     cert_list = get_cert_arns(acm)
-    source_prefixes = os.environ["ADDITIONAL_CERTS_PREFIXES"].split(",")
+    source_prefixes_ev = os.environ["ADDITIONAL_CERTS_PREFIXES"]
+    source_prefixes = source_prefixes_ev.split(",")
     bucket = os.environ["ADDITIONAL_CERTS_BUCKET"]
     logger.info("Saving ACM certs...")
 
@@ -116,18 +117,18 @@ def main():
         else:
             logger.info(f"Successfully saved cert with domain: {domain}")
 
-    cert_list_additional = get_additional_certs_keys(bucket, source_prefixes, s3_client)
+    additional_certs = get_additional_certs_keys(bucket, source_prefixes, s3_client)
 
     logger.info("Saving non-ACM certs...")
 
-    for cert in cert_list_additional:
-        cert_name = cert.get("cert_name")
-        key = cert.get("key")
-        data = get_additional_cert_data(key, bucket, s3_resource)
+    for el in additional_certs:
+        cert_name = el.get("cert_name")
+        key = el.get("key")
+        cert_data = get_additional_cert_data(key, bucket, s3_resource)
 
-        successful = save_cert(cert_name, data)
+        successful_additional = save_cert(cert_name, cert_data)
 
-        if not successful:
+        if not successful_additional:
             logger.error(f"Failed to save cert with name: {cert_name}")
         else:
             logger.info(f"Successfully saved cert with name: {cert_name}")
