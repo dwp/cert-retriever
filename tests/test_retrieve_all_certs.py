@@ -2,6 +2,7 @@ import os
 import re
 import unittest
 from unittest.mock import MagicMock
+from mock import patch
 
 import boto3
 from moto import mock_acm
@@ -9,8 +10,6 @@ from moto import mock_s3
 
 dest_folder = os.path.join(os.getcwd(), "tests")
 os.environ["CERTS_DESTINATION_FOLDER"] = dest_folder
-os.environ["ADDITIONAL_CERTS_PREFIXES"] = "prefixone,prefixtwo"
-os.environ["ADDITIONAL_CERTS_BUCKET"] = "ac_bucket"
 
 
 from src import retrieve_all_certs
@@ -18,6 +17,19 @@ from src import retrieve_all_certs
 retrieve_all_certs.logger = MagicMock()
 
 cert_pattern = re.compile(r"-+BEGIN CERTIFICATE-+[\n\s\S]+-+END CERTIFICATE-+\n")
+
+os.environ["ADDITIONAL_CERTS_PREFIXES"] = "prefixone,prefixtwo/folder"
+os.environ["ADDITIONAL_CERTS_BUCKET"] = "ac-bucket"
+certs_keys_expected = [
+    {"key": "prefixone/abcd.pem", "cert_name": "prefixone_abcd"},
+    {"key": "prefixone/abcd/abcd.pem", "cert_name": "prefixone_abcd_abcd"},
+    {
+        "key": "prefixtwo/folder/abcd/abcd.pem",
+        "cert_name": "prefixtwo_folder_abcd_abcd",
+    },
+]
+
+test_content = b"-----BEGIN (test) CERTIFICATE----- abcd -----END CERTIFICATE-----"
 
 
 @mock_acm
@@ -38,10 +50,30 @@ class RetrieveAllCertsTests(unittest.TestCase):
         self.test_cert = self.acm.get_certificate(CertificateArn=self.test_arn)[
             "Certificate"
         ]
-
         self.filepaths_to_remove = []
-        self.source_prefixes = os.environ["ADDITIONAL_CERTS_PREFIXES"].split(",")
+        source_prefixes = os.environ["ADDITIONAL_CERTS_PREFIXES"]
+        self.source_prefixes = source_prefixes.split(",")
         self.bucket = os.environ["ADDITIONAL_CERTS_BUCKET"]
+        try:
+            self.s3_client.create_bucket(
+                Bucket=self.bucket,
+                CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
+            )
+        except:
+            Exception
+
+        self.s3_client.put_object(
+            Bucket=self.bucket, Key="prefixone/abcd.pem", Body=test_content
+        )
+        self.s3_client.put_object(
+            Bucket=self.bucket, Key="prefixtwo/folder/abcd/abcd.pem", Body=test_content
+        )
+        self.s3_client.put_object(
+            Bucket=self.bucket, Key="prefixone/abcd/abcd.pem", Body=test_content
+        )
+        self.s3_client.put_object(
+            Bucket=self.bucket, Key="not/prefixone/abcd/abcd.pem", Body=test_content
+        )
 
     def tearDown(self):
         for filepath in self.filepaths_to_remove:
@@ -76,37 +108,38 @@ class RetrieveAllCertsTests(unittest.TestCase):
 
     def test_get_additional_certs_keys(self):
 
-        self.s3_client.create_bucket(
-            Bucket=self.bucket,
-            CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
-        )
-        some_data = b"-----BEGIN (test) CERTIFICATE----- abcd -----END CERTIFICATE-----"
-        self.s3_client.put_object(
-            Bucket=self.bucket, Key="prefixone/abcd.pem", Body=some_data
-        )
-        self.s3_client.put_object(
-            Bucket=self.bucket, Key="prefixtwo/abcd/abcd.pem", Body=some_data
-        )
-        self.s3_client.put_object(
-            Bucket=self.bucket, Key="prefixone/abcd/abcd.pem", Body=some_data
-        )
-        self.s3_client.put_object(
-            Bucket=self.bucket, Key="not/prefixone/abcd/abcd.pem", Body=some_data
-        )
-        expected = [
-            {"key": "prefixone/abcd.pem", "cert_name": "prefixone_abcd"},
-            {"key": "prefixone/abcd/abcd.pem", "cert_name": "prefixone_abcd_abcd"},
-            {"key": "prefixtwo/abcd/abcd.pem", "cert_name": "prefixtwo_abcd_abcd"},
-        ]
         actual = retrieve_all_certs.get_additional_certs_keys(
             self.s3_client, self.bucket, self.source_prefixes
         )
-        self.assertEqual(expected, actual)
+        self.assertEqual(certs_keys_expected, actual)
 
-    def test_main(self):
+    def test_get_additional_cert_data(self):
+
+        actual = retrieve_all_certs.get_additional_cert_data(
+            self.s3_resource, certs_keys_expected[0]["key"], self.bucket
+        )
+        self.assertEqual(test_content, actual)
+
+    @patch(
+        "src.retrieve_all_certs.get_additional_certs_keys",
+        return_value=certs_keys_expected,
+    )
+    @patch(
+        "src.retrieve_all_certs.get_additional_cert_data",
+        return_value=test_content,
+    )
+    def test_main(self, mock_get_additional_certs_keys, mock_get_additional_cert_data):
+
         retrieve_all_certs.main()
 
-        for filename in ["test.com", "test.test.com", "test2.test.com"]:
+        for filename in [
+            "test.com",
+            "test.test.com",
+            "test2.test.com",
+            "prefixone_abcd",
+            "prefixone_abcd_abcd",
+            "prefixtwo_folder_abcd_abcd",
+        ]:
             filepath = os.path.join(dest_folder, f"{filename}.pem")
             self.filepaths_to_remove.append(filepath)
 

@@ -13,8 +13,6 @@ environment = os.environ.get("ENVIRONMENT", "NOT_SET")
 application = os.environ.get("APPLICATION", "NOT_SET")
 
 dest_folder = os.environ["CERTS_DESTINATION_FOLDER"]
-source_prefixes = os.environ["ADDITIONAL_CERTS_PREFIXES"].split(",")
-bucket = os.environ["ADDITIONAL_CERTS_BUCKET"]
 
 
 def setup_logging(logger_level, env, app):
@@ -75,8 +73,8 @@ def save_cert(domain_name, cert_data):
     return True
 
 
-def get_additional_certs_keys(s3_client, bucket, prefixes: list):
-    response = s3_client.list_objects(Bucket=bucket)
+def get_additional_certs_keys(s3_client, source_bucket, prefixes: list):
+    response = s3_client.list_objects(Bucket=source_bucket)
     certs_keys = []
     for el in prefixes:
         certs_keys = certs_keys + [
@@ -90,9 +88,9 @@ def get_additional_certs_keys(s3_client, bucket, prefixes: list):
     return certs_keys
 
 
-def get_additional_cert_data(s3_resource, key, bucket):
-    bucket = s3_resource.Bucket(bucket)
-    ob = bucket.Object(key)
+def get_additional_cert_data(s3_resource, key, source_bucket):
+    bucket_res = s3_resource.Bucket(source_bucket)
+    ob = bucket_res.Object(key)
     return ob.get()["Body"].read()
 
 
@@ -101,7 +99,8 @@ def main():
     s3_client = boto3.client("s3", region_name=region)
     s3_resource = boto3.resource("s3", region_name=region)
     cert_list = get_cert_arns(acm)
-
+    source_prefixes = os.environ["ADDITIONAL_CERTS_PREFIXES"].split(",")
+    bucket = os.environ["ADDITIONAL_CERTS_BUCKET"]
     logger.info("Saving ACM certs...")
 
     for cert in cert_list:
