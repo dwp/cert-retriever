@@ -47,7 +47,7 @@ logger = setup_logging(log_level, environment, application)
 
 
 def get_cert_arns(acm_client):
-    logger.info("Getting all certs from ACM...")
+    logger.info(f"Getting all certs from ACM...")
     return [
         {"arn": i["CertificateArn"], "domain": i["DomainName"]}
         for i in acm_client.list_certificates().get("CertificateSummaryList", [])
@@ -74,7 +74,7 @@ def save_cert(domain_name, cert_data):
 
 
 def get_additional_certs_keys(s3_client, source_bucket, prefixes: list):
-    logger.info("Getting certs keys from source bucket...")
+    logger.info(f"Getting certs keys from {source_bucket}...")
     response = s3_client.list_objects(Bucket=source_bucket)
     certs_keys = []
     for el in prefixes:
@@ -104,7 +104,7 @@ def main():
     source_prefixes_ev = os.environ["ADDITIONAL_CERTS_PREFIXES"]
     source_prefixes = source_prefixes_ev.split(",")
     bucket = os.environ["ADDITIONAL_CERTS_BUCKET"]
-    logger.info("Saving ACM certs...")
+    logger.info(f"Saving ACM certs...")
 
     for cert in cert_list:
         domain = cert.get("domain")
@@ -119,7 +119,7 @@ def main():
 
     additional_certs = get_additional_certs_keys(bucket, source_prefixes, s3_client)
 
-    logger.info("Saving non-ACM certs...")
+    logger.info(f"Saving non-ACM certs...")
 
     for el in additional_certs:
         cert_name = el.get("cert_name")
