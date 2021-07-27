@@ -1,7 +1,7 @@
 # cert-retriever
 
 This image contains a Python script which gets a list of all the AWS ACM and retrieves them, 
-saving them in the path specified using `CERTS_DESTINATION_FOLDER`. Additionally, the script reads some non-ACM certificates stored in the S3 bucket `ADDITIONAL_CERTS_BUCKET` in any of the paths specified in the `ADDITIONAL_CERTS_PREFIXES`.
+saving them in the path specified using `CERTS_DESTINATION_FOLDER`. Additionally, the script reads some non-ACM certificates stored in the S3 bucket `ADDITIONAL_CERTS_BUCKET` at any of the paths and any of the folders within the path(s) specified in the `ADDITIONAL_CERTS_PREFIXES` and saves them in the destination folder along with the ACM certificates.
 
 ## Docker repository for fetching all ACM certs in different environments
 
@@ -24,4 +24,3 @@ The required environment variables. They are replaced with the parameters passed
 | APPLICATION               | NOT_SET              | The name of the application                          |
 | ADDITIONAL_CERTS_BUCKET   | bucket-name          | The id of the S3 bucket where non-ACM certs are      |
 | ADDITIONAL_CERTS_PREFIXES | ab_certs,cd/ef_certs | The string of comma separated prefixes               |
-                                                     that contain certs that should be retrieved           
