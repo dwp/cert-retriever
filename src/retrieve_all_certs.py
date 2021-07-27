@@ -74,6 +74,7 @@ def save_cert(domain_name, cert_data):
 
 
 def get_additional_certs_keys(s3_client, source_bucket, prefixes: list):
+    logger.info("Getting certs keys from source bucket...")
     response = s3_client.list_objects(Bucket=source_bucket)
     certs_keys = []
     for el in prefixes:
@@ -89,6 +90,7 @@ def get_additional_certs_keys(s3_client, source_bucket, prefixes: list):
 
 
 def get_additional_cert_data(s3_resource, key, source_bucket):
+    logger.info(f"Getting cert data for {key}")
     bucket_res = s3_resource.Bucket(source_bucket)
     ob = bucket_res.Object(key)
     return ob.get()["Body"].read()
