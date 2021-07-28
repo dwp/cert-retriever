@@ -75,24 +75,32 @@ def save_cert(domain_name, cert_data):
 
 def get_additional_certs_keys(s3_client, source_bucket, prefixes: list):
     logger.info(f"Getting certs keys from {source_bucket}...")
-    response = s3_client.list_objects(Bucket=source_bucket)
-    certs_keys = []
-    for el in prefixes:
-        certs_keys = certs_keys + [
-            {
-                "key": i["Key"],
-                "cert_name": i["Key"].replace(".pem", "").replace("/", "_"),
-            }
-            for i in response["Contents"]
-            if re.match(el + "\/.*\.pem", i["Key"])
-        ]
+    try:
+        response = s3_client.list_objects(Bucket=source_bucket)
+        certs_keys = []
+        for el in prefixes:
+            certs_keys = certs_keys + [
+                {
+                    "key": i["Key"],
+                    "cert_name": i["Key"].replace(".pem", "").replace("/", "_"),
+                }
+                for i in response["Contents"]
+                if re.match(el + "\/.*\.pem", i["Key"])
+            ]
+    except Exception as e:
+        logger.error(e)
+        return None
     return certs_keys
 
 
 def get_additional_cert_data(s3_resource, key, source_bucket):
     logger.info(f"Getting cert data for {key}")
-    bucket_res = s3_resource.Bucket(source_bucket)
-    ob = bucket_res.Object(key)
+    try:
+        bucket_res = s3_resource.Bucket(source_bucket)
+        ob = bucket_res.Object(key)
+    except Exception as e:
+        logger.error(e)
+        return None
     return ob.get()["Body"].read()
 
 
@@ -119,7 +127,7 @@ def main():
 
     additional_certs = get_additional_certs_keys(bucket, source_prefixes, s3_client)
 
-    logger.info(f"Saving non-ACM certs...")
+    logger.info(f"Saving non-ACM certs that are in {bucket} at {source_prefixes_ev}...")
 
     for el in additional_certs:
         cert_name = el.get("cert_name")
