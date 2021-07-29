@@ -132,7 +132,7 @@ def main():
     for el in additional_certs:
         cert_name = el.get("cert_name")
         key = el.get("key")
-        cert_data = get_additional_cert_data(key, bucket, s3_resource)
+        cert_data = get_additional_cert_data(s3_resource, key, bucket)
 
         successful_additional = save_cert(cert_name, cert_data)
 
