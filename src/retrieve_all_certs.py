@@ -47,7 +47,7 @@ logger = setup_logging(log_level, environment, application)
 
 
 def get_cert_arns(acm_client):
-    logger.info("Getting all certs from ACM...")
+    logger.info(f"Getting all certs from ACM...")
     return [
         {"arn": i["CertificateArn"], "domain": i["DomainName"]}
         for i in acm_client.list_certificates().get("CertificateSummaryList", [])
@@ -74,25 +74,33 @@ def save_cert(domain_name, cert_data):
 
 
 def get_additional_certs_keys(s3_client, source_bucket, prefixes: list):
-    logger.info("Getting certs keys from source bucket...")
-    response = s3_client.list_objects(Bucket=source_bucket)
-    certs_keys = []
-    for el in prefixes:
-        certs_keys = certs_keys + [
-            {
-                "key": i["Key"],
-                "cert_name": i["Key"].replace(".pem", "").replace("/", "_"),
-            }
-            for i in response["Contents"]
-            if re.match(el + "\/.*\.pem", i["Key"])
-        ]
+    logger.info(f"Getting certs keys from {source_bucket}...")
+    try:
+        response = s3_client.list_objects(Bucket=source_bucket)
+        certs_keys = []
+        for el in prefixes:
+            certs_keys = certs_keys + [
+                {
+                    "key": i["Key"],
+                    "cert_name": i["Key"].replace(".pem", "").replace("/", "_"),
+                }
+                for i in response["Contents"]
+                if re.match(el + "\/.*\.pem", i["Key"])
+            ]
+    except Exception as e:
+        logger.error(e)
+        return None
     return certs_keys
 
 
 def get_additional_cert_data(s3_resource, key, source_bucket):
     logger.info(f"Getting cert data for {key}")
-    bucket_res = s3_resource.Bucket(source_bucket)
-    ob = bucket_res.Object(key)
+    try:
+        bucket_res = s3_resource.Bucket(source_bucket)
+        ob = bucket_res.Object(key)
+    except Exception as e:
+        logger.error(e)
+        return None
     return ob.get()["Body"].read()
 
 
@@ -101,9 +109,10 @@ def main():
     s3_client = boto3.client("s3", region_name=region)
     s3_resource = boto3.resource("s3", region_name=region)
     cert_list = get_cert_arns(acm)
-    source_prefixes = os.environ["ADDITIONAL_CERTS_PREFIXES"].split(",")
+    source_prefixes_ev = os.environ["ADDITIONAL_CERTS_PREFIXES"]
+    source_prefixes = source_prefixes_ev.split(",")
     bucket = os.environ["ADDITIONAL_CERTS_BUCKET"]
-    logger.info("Saving ACM certs...")
+    logger.info(f"Saving ACM certs...")
 
     for cert in cert_list:
         domain = cert.get("domain")
@@ -116,18 +125,18 @@ def main():
         else:
             logger.info(f"Successfully saved cert with domain: {domain}")
 
-    cert_list_additional = get_additional_certs_keys(bucket, source_prefixes, s3_client)
+    additional_certs = get_additional_certs_keys(bucket, source_prefixes, s3_client)
 
-    logger.info("Saving non-ACM certs...")
+    logger.info(f"Saving non-ACM certs that are in {bucket} at {source_prefixes_ev}...")
 
-    for cert in cert_list_additional:
-        cert_name = cert.get("cert_name")
-        key = cert.get("key")
-        data = get_additional_cert_data(key, bucket, s3_resource)
+    for el in additional_certs:
+        cert_name = el.get("cert_name")
+        key = el.get("key")
+        cert_data = get_additional_cert_data(key, bucket, s3_resource)
 
-        successful = save_cert(cert_name, data)
+        successful_additional = save_cert(cert_name, cert_data)
 
-        if not successful:
+        if not successful_additional:
             logger.error(f"Failed to save cert with name: {cert_name}")
         else:
             logger.info(f"Successfully saved cert with name: {cert_name}")
