@@ -125,7 +125,7 @@ def main():
         else:
             logger.info(f"Successfully saved cert with domain: {domain}")
 
-    additional_certs = get_additional_certs_keys(bucket, source_prefixes, s3_client)
+    additional_certs = get_additional_certs_keys(s3_client, bucket, source_prefixes)
 
     logger.info(f"Saving non-ACM certs that are in {bucket} at {source_prefixes_ev}...")
 
