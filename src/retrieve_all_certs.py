@@ -101,7 +101,7 @@ def get_additional_cert_data(s3_resource, key, source_bucket):
     except Exception as e:
         logger.error(e)
         return None
-    return ob.get()["Body"].read()
+    return ob.get()["Body"].read().decode("utf-8")
 
 
 def main():
