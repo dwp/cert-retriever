@@ -29,7 +29,7 @@ certs_keys_expected = [
     },
 ]
 
-test_content = b"-----BEGIN (test) CERTIFICATE----- abcd -----END CERTIFICATE-----"
+test_content = "-----BEGIN (test) CERTIFICATE----- abcd -----END CERTIFICATE-----"
 
 
 @mock_acm
