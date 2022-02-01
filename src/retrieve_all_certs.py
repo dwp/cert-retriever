@@ -85,7 +85,7 @@ def get_additional_certs_keys(s3_client, source_bucket, prefixes: list):
                     "cert_name": i["Key"].replace(".pem", "").replace("/", "_"),
                 }
                 for i in response["Contents"]
-                if re.match(el + "\/.*\.pem", i["Key"])
+                if re.match(el + r"/.*\.pem", i["Key"])
             ]
     except Exception as e:
         logger.error(e)
