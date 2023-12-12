@@ -13,7 +13,7 @@ jobs:
   docker-build-and-scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Build Docker image
         run: docker build -t ${{ env.IMAGE_NAME }}:latest .
       - name: Run Snyk to check image for high vulnerabilities
@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
 
       - name: Set up Python 3.8
         uses: actions/setup-python@v1
@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v4
 
       - name: Set up Python 3.8
         uses: actions/setup-python@v1
