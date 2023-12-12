@@ -1,3 +1,5 @@
+# DO NOT USE THIS REPO - MIGRATED TO GITLAB
+
 # cert-retriever
 
 This image contains a Python script which gets a list of all the AWS ACM and retrieves them, 
